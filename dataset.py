@@ -7,7 +7,7 @@ import example_pb2
 
 
 class Dataset(data.Dataset):
-    def __init__(self, path_to_lmdb_dir, transform):
+    def __init__(self, path_to_lmdb_dir, transform):          #定义dataset，用于承接读取lmdb后的数据进行dataloder的制作
         self._path_to_lmdb_dir = path_to_lmdb_dir
         self._reader = lmdb.open(path_to_lmdb_dir, lock=False)
         with self._reader.begin() as txn:

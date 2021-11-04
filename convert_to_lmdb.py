@@ -22,7 +22,7 @@ class ExampleReader(object):
         self._example_pointer = 0
 
     @staticmethod
-    def _get_attrs(digit_struct_mat_file, index):
+    def _get_attrs(digit_struct_mat_file, index):         #读取数据集.mat为文件，也就是对label进行读取
         """
         Returns a dictionary which contains keys: label, left, top, width and height, each key has multiple values.
         """
@@ -37,7 +37,7 @@ class ExampleReader(object):
         return attrs
 
     @staticmethod
-    def _preprocess(image, bbox_left, bbox_top, bbox_width, bbox_height):
+    def _preprocess(image, bbox_left, bbox_top, bbox_width, bbox_height):  #通过读取的bbox label计算出具体的最大矩形框并且压入lmdb中
         cropped_left, cropped_top, cropped_width, cropped_height = (int(round(bbox_left - 0.15 * bbox_width)),
                                                                     int(round(bbox_top - 0.15 * bbox_height)),
                                                                     int(round(bbox_width * 1.3)),

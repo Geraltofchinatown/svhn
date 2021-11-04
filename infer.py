@@ -16,7 +16,7 @@ def _infer(path_to_checkpoint_file, path_to_input_image):
     model.restore(path_to_checkpoint_file)
     model.cuda()
 
-    with torch.no_grad():
+    with torch.no_grad():      #infer就相当于单次的test，步骤非常相似
         transform = transforms.Compose([
             transforms.Resize([64, 64]),
             transforms.CenterCrop([54, 54]),

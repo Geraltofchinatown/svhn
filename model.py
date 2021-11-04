@@ -14,7 +14,7 @@ class Model(torch.jit.ScriptModule):
                      '_features', '_classifier',
                      '_digit_length', '_digit1', '_digit2', '_digit3', '_digit4', '_digit5']
 
-    def __init__(self):
+    def __init__(self):                #卷积层定义
         super(Model, self).__init__()
 
         self._hidden1 = nn.Sequential(
@@ -90,7 +90,7 @@ class Model(torch.jit.ScriptModule):
         self._digit5 = nn.Sequential(nn.Linear(3072, 11))
 
     @torch.jit.script_method
-    def forward(self, x):
+    def forward(self, x):       #前向传播运行逻辑定义
         x = self._hidden1(x)
         x = self._hidden2(x)
         x = self._hidden3(x)
@@ -112,7 +112,7 @@ class Model(torch.jit.ScriptModule):
 
         return length_logits, digit1_logits, digit2_logits, digit3_logits, digit4_logits, digit5_logits
 
-    def store(self, path_to_dir, step, maximum=5):
+    def store(self, path_to_dir, step, maximum=5):     #保存model的函数
         path_to_models = glob.glob(os.path.join(path_to_dir, Model.CHECKPOINT_FILENAME_PATTERN.format('*')))
         if len(path_to_models) == maximum:
             min_step = min([int(path_to_model.split('/')[-1][6:-4]) for path_to_model in path_to_models])
@@ -123,7 +123,7 @@ class Model(torch.jit.ScriptModule):
         torch.save(self.state_dict(), path_to_checkpoint_file)
         return path_to_checkpoint_file
 
-    def restore(self, path_to_checkpoint_file):
+    def restore(self, path_to_checkpoint_file):   #读取model的函数
         self.load_state_dict(torch.load(path_to_checkpoint_file))
         step = int(path_to_checkpoint_file.split('/')[-1][6:-4])
         return step

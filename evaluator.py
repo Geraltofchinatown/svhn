@@ -6,7 +6,7 @@ from dataset import Dataset
 
 
 class Evaluator(object):
-    def __init__(self, path_to_lmdb_dir):
+    def __init__(self, path_to_lmdb_dir):               #读取test时候需要用到的lmdb文件
         transform = transforms.Compose([
             transforms.CenterCrop([54, 54]),
             transforms.ToTensor(),
@@ -18,7 +18,7 @@ class Evaluator(object):
         num_correct = 0
         needs_include_length = False
 
-        with torch.no_grad():
+        with torch.no_grad():#禁用反向传播计算梯度，进行test
             for batch_idx, (images, length_labels, digits_labels) in enumerate(self._loader):
                 images, length_labels, digits_labels = images.cuda(), length_labels.cuda(), [digit_labels.cuda() for digit_labels in digits_labels]
                 length_logits, digit1_logits, digit2_logits, digit3_logits, digit4_logits, digit5_logits = model.eval()(images)
@@ -30,7 +30,7 @@ class Evaluator(object):
                 digit4_prediction = digit4_logits.max(1)[1]
                 digit5_prediction = digit5_logits.max(1)[1]
 
-                if needs_include_length:
+                if needs_include_length:                                                              #对五次预测的结果进行平均
                     num_correct += (length_prediction.eq(length_labels) &
                                     digit1_prediction.eq(digits_labels[0]) &
                                     digit2_prediction.eq(digits_labels[1]) &

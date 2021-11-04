@@ -15,7 +15,7 @@ from dataset import Dataset
 from evaluator import Evaluator
 from model import Model
 
-parser = argparse.ArgumentParser()
+parser = argparse.ArgumentParser()   #定义训练时候的config
 parser.add_argument('-d', '--data_dir', default='./data', help='directory to read LMDB files')
 parser.add_argument('-l', '--logdir', default='./logs', help='directory to write logs')
 parser.add_argument('-r', '--restore_checkpoint', default=None,
@@ -28,7 +28,7 @@ parser.add_argument('-dr', '--decay_rate', default=0.9, type=float, help='Defaul
 
 
 def _loss(length_logits, digit1_logits, digit2_logits, digit3_logits, digit4_logits, digit5_logits, length_labels, digits_labels):
-    length_cross_entropy = torch.nn.functional.cross_entropy(length_logits, length_labels)
+    length_cross_entropy = torch.nn.functional.cross_entropy(length_logits, length_labels)#loss为五次预测交叉熵的平均
     digit1_cross_entropy = torch.nn.functional.cross_entropy(digit1_logits, digits_labels[0])
     digit2_cross_entropy = torch.nn.functional.cross_entropy(digit2_logits, digits_labels[1])
     digit3_cross_entropy = torch.nn.functional.cross_entropy(digit3_logits, digits_labels[2])
@@ -59,14 +59,14 @@ def _train(path_to_train_lmdb_dir, path_to_val_lmdb_dir, path_to_log_dir,
         transforms.ToTensor(),
         transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5])
     ])
-    train_loader = torch.utils.data.DataLoader(Dataset(path_to_train_lmdb_dir, transform),
+    train_loader = torch.utils.data.DataLoader(Dataset(path_to_train_lmdb_dir, transform),#训练初始化，包括数据初始化还有优化器，loss函数等
                                                batch_size=batch_size, shuffle=True,
                                                num_workers=4, pin_memory=True)
     evaluator = Evaluator(path_to_val_lmdb_dir)
     optimizer = optim.SGD(model.parameters(), lr=initial_learning_rate, momentum=0.9, weight_decay=0.0005)
     scheduler = StepLR(optimizer, step_size=training_options['decay_steps'], gamma=training_options['decay_rate'])
 
-    if path_to_restore_checkpoint_file is not None:
+    if path_to_restore_checkpoint_file is not None:#查看是否恢复训练，也就是之前有没有已经存在的model
         assert os.path.isfile(path_to_restore_checkpoint_file), '%s not found' % path_to_restore_checkpoint_file
         step = model.restore(path_to_restore_checkpoint_file)
         scheduler.last_epoch = step
@@ -78,14 +78,14 @@ def _train(path_to_train_lmdb_dir, path_to_val_lmdb_dir, path_to_log_dir,
     else:
         losses = np.empty([0], dtype=np.float32)
 
-    while True:
+    while True:#开始训练
         for batch_idx, (images, length_labels, digits_labels) in enumerate(train_loader):
             start_time = time.time()
             images, length_labels, digits_labels = images.cuda(), length_labels.cuda(), [digit_labels.cuda() for digit_labels in digits_labels]
             length_logits, digit1_logits, digit2_logits, digit3_logits, digit4_logits, digit5_logits = model.train()(images)
             loss = _loss(length_logits, digit1_logits, digit2_logits, digit3_logits, digit4_logits, digit5_logits, length_labels, digits_labels)
 
-            optimizer.zero_grad()
+            optimizer.zero_grad()  #训练过程，前向传播，反向传播，然后优化
             loss.backward()
             optimizer.step()
             scheduler.step()
@@ -104,7 +104,7 @@ def _train(path_to_train_lmdb_dir, path_to_val_lmdb_dir, path_to_log_dir,
             losses = np.append(losses, loss.item())
             np.save(path_to_losses_npy_file, losses)
 
-            print('=> Evaluating on validation dataset...')
+            print('=> Evaluating on validation dataset...')  #val，用来计算是否保存model
             accuracy = evaluator.evaluate(model)
             print('==> accuracy = %f, best accuracy %f' % (accuracy, best_accuracy))
 
